@@ -1,0 +1,186 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+<h1>Portfolio {{ portfolioname }}</h1>
+<h2>Diversification</h2>
+<div class="charts">
+  <div class="row">
+    <div class="col-sm" id="stockChart"></div>
+    <div class="col-sm" id="regionChart"></div>
+    <div class="col-sm" id="industryChart"></div>
+  </div>
+</div>
+{% if portfolio_graph|length > 0 %}
+<div class="mb-5" id="chart" style="width:100%; height:600px;"></div>
+{% endif %}
+{% if signal_stats|length > 0 %}
+<h2>Signal performance</h2>
+<div class="mb-5" id="chartPerformance" style="width:100%; height:600px;"></div>
+{% endif %}
+{% for item in performance %}
+<h2>{{ item.name }} performance</h2>
+<div class="mb-5 panel-body table-responsive">
+    <table id="sortable{{ item.name }}" class="table" >
+        <thead>
+            <tr>
+                <th class="sortable">Stock <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Earnings <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Levermann <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Piotroski <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Date <i class="fa fa-fw fa-sort"></i></th>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+        {% for sub in item.data %}
+        <tr>
+            <td><a href="{% url 'stocks:stock_data' stock_id=sub.stock__id %}">{{ sub.stock__symbol }} ({{ sub.stock__name }})</a></td>
+            {% if sub.earnings < 0.0 %}
+            <td class="alert alert-danger">{{ sub.earnings|floatformat:2 }}</td>
+            {% else %}
+            <td class="alert alert-success">{{ sub.earnings|floatformat:2 }}</td>
+            {% endif %}
+
+            {% if  sub.levermann_status == 0 %}
+            <td class="alert alert-danger">{{ sub.levermann }}</td>
+            {% elif  sub.levermann_status == 1 %}
+            <td class="alert alert-success">{{ sub.levermann }}</td>
+            {% elif  sub.levermann_status == 2 %}
+            <td class="alert alert-warning">{{ sub.levermann }}</td>
+            {% else %}
+            <td>{{ sub.levermann }}</td>
+            {% endif %}
+
+            {% if sub.piotroski_status == 0 %}
+            <td class="alert alert-danger">{{ sub.piotroski }}</td>
+            {% elif  sub.piotroski_status == 1 %}
+            <td class="alert alert-success">{{ sub.piotroski }}</td>
+            {% elif  sub.piotroski_status == 2 %}
+            <td class="alert alert-warning">{{ sub.piotroski }}</td>
+            {% else %}
+            <td>{{ sub.piotroski }}</td>
+            {% endif %}
+            <td>{{ sub.date }}</td>
+            <td><button class="btn" id="{{ sub.stock__id }}"><i class="fa fa-dollar"></i></button></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+$(function(){
+  $("#sortable{{ item.name }}").tablesorter();
+});
+</script>
+{% endfor %}
+{% for title in titles %}
+<h2>{{ title.name }}</h2>
+<div class="mb-5 panel-body table-responsive">
+    <table id="sortable{{ forloop.counter }}" class="table" >
+        <thead>
+            <tr>
+                <th class="sortable">Stock <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Type <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">price <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">commission <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Size <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Price complete <i class="fa fa-fw fa-sort"></i></th>
+                <th>Status</th>
+                <th class="sortable">Date <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Signal <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Order <i class="fa fa-fw fa-sort"></i></th>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+        {% for order in title.data %}
+        <tr>
+            <td><a href="{% url 'stocks:stock_data' stock_id=order.stock.id %}">{{ order.stock.symbol }} ({{ order.stock.name }})</a></td>
+            <td>{{ order.order_type }}</td>
+            <td>{{ order.price }}</td>
+            <td>{{ order.commission }}</td>
+            <td>{{ order.size }}</td>
+            <td>{{ order.price_complete }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.date }}</td>
+            {% if order.signal.id  %}
+            <td><a href="{% url 'stocks:stock_signal_viewer_id' signal_id=order.signal.id  %}">{{ order.signal.name }}</a></td>
+            {% else %}
+             <td></td>
+            {% endif %}
+            <td><a href="{% url 'stocks:order_viewer_id' order_id=order.id  %}">{{ order.id }}</a></td>
+            <td> <a href="{{ order.get_delete_url }}" class="btn btn-danger"><i class="fa fa-trash"></i></a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+$(function(){
+  $("#sortable{{ forloop.counter }}").tablesorter();
+});
+</script>
+{% endfor %}
+
+<script>
+
+
+$(function () {
+    var chartDivStock = Highcharts.chart('stockChart', PortFolioDesigner.createChartOptionsData('Stocks', {{ stocks_data|safe }}));
+    var chartDivRegion = Highcharts.chart('regionChart', PortFolioDesigner.createChartOptionsData('Region', {{ regions_data|safe }}));
+    var chartDivIndustry = Highcharts.chart('industryChart', PortFolioDesigner.createChartOptionsData('Industry', {{ industry_data|safe }}));
+ {% if  signal_stats|length > 0 %}
+    Highcharts.chart('chartPerformance', {
+        chart: {
+            type: 'bar'
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            type: 'category',
+        },
+        yAxis: {
+            title: {
+                text: 'Earnings in €'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series:  [{
+            name: 'Signal performance',
+            data: {{ signal_stats|safe }}
+        }]
+    });
+{% endif %}
+{% if  portfolio_graph|length > 0 %}
+
+    Highcharts.chart('chart', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            type: 'datetime'
+        },
+        yAxis: {
+            title: {
+                text: 'Portfolio cash in €'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series:  [{
+            name: 'Overall performance',
+            data: {{ portfolio_graph }}
+        }]
+    });
+{% endif %}
+});
+</script>
+{% endblock %}

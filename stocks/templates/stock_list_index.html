@@ -1,0 +1,14 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+<h1>Stocks</h1>
+
+<ul class="list-group">
+    {% for index in indices %}
+    <h2>{{ index.symbol }}</h2>
+    {% for stock in index.stocks.all %}
+    <li class="list-group-item"><a href="{% url 'stocks:stock_data' stock_id=stock.id %}">{{ stock.symbol }}</a></li>
+    {% endfor %}
+    {% endfor %}
+</ul>
+{% endblock %}

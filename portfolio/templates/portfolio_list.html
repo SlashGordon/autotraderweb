@@ -1,0 +1,40 @@
+{% extends 'layouts/default/base.html' %}
+{% block content %}
+{% include "_modal.html" %}
+{% load app_filters %}
+<h1>Portfolio</h1>
+<div class="mb-5 panel-body table-responsive">
+    <table id="sortable1" class="table" >
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>cash </th>
+                <th>total value</th>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+        {% for portfolio in portfolios %}
+        <tr>
+            <td><a href="{% url 'portfolio:portfolio_viewer' id=portfolio.id %}">{{ portfolio.name }}</a></td>
+            <td>{{ portfolio.cash }}</td>
+            <td>{{ portfolio.cash }}</td>
+            <td><button class="btn btn-danger" id="delete{{ portfolio.id }}"><i class="fa fa-trash"></i></button></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+$(document).ready(function()
+{
+    {% for portfolio in portfolios %}
+    $("#delete{{ portfolio.id }}").modalForm({
+        formURL: "{% url 'portfolio:portfolio_delete_view' pk=portfolio.id%}"
+    });
+    {% endfor %}
+
+});
+
+</script>
+{% endblock %}

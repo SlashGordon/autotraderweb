@@ -1,0 +1,57 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+<h1>Signal results for {{ stock.symbol }}</h1>
+<div id="chart" style="width:100%; height:600px;"></div>
+
+<script>
+$(function () {
+    Highcharts.stockChart('chart', {
+        rangeSelector: {
+            selected: 1
+        },
+      yAxis: [{ // Primary yAxis
+            labels: {
+                format: '{value}€',
+                style: {
+                    color: Highcharts.getOptions().colors[0]
+                }
+            },
+            title: {
+                text: 'Price open',
+                style: {
+                    color: Highcharts.getOptions().colors[0]
+                }
+            },
+            opposite: false
+        }, { // Secondary yAxis
+            gridLineWidth: 0,
+            title: {
+                text: 'Indicators',
+                style: {
+                    color: Highcharts.getOptions().colors[2]
+                }
+            },
+            labels: {
+                format: '{value}',
+                style: {
+                    color: Highcharts.getOptions().colors[2]
+                }
+            },
+            opposite: true
+        }],
+        title: {
+            text: '{{ title }}'
+        },
+        subtitle: {
+            text: '{{ subtitle }}'
+        },
+        credits: {
+            enabled: false
+        },
+        series: {{ data|safe }}
+    });
+});
+</script>
+{% endblock %}

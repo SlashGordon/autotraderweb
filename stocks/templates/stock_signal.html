@@ -1,0 +1,48 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+<h1>Signals</h1>
+<table id="sortable1" class="table" >
+    <thead>
+        <tr>
+            <th class="sortable">Symbol<i class="fa fa-fw fa-sort"></i></th>
+            {% for title in titles %}
+            <th class="sortable">{{ title }} <i class="fa fa-fw fa-sort"></i></th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for stock , signal in signals.items %}
+    <tr>
+        {% for title in titles %}
+        {% for key, value in signal.items %}
+        {% if key == title %}
+        {% if forloop.counter0 == 0 %}
+        <td><a href="{% url 'stocks:stock_data' stock_id=value.0 %}">{{ value.3 }}</a></td>
+        {% endif %}
+        {% if value.2 == -2 %}
+
+        <td class="alert alert-danger"><a href="{% url 'stocks:stock_signal_viewer_id' signal_id=value.4 %}">{{ value.1 }}</a></td>
+        {% elif value.2  == 2 %}
+        <td class="alert alert-success"><a href="{% url 'stocks:stock_signal_viewer_id' signal_id=value.4 %}">{{ value.1 }}</a></td>
+        {% elif value.2  == 1 %}
+        <td class="alert alert-info"><a href="{% url 'stocks:stock_signal_viewer_id' signal_id=value.4 %}">{{ value.1 }}</a></td>
+        {% else %}
+        <td class="alert alert-warning"><a href="{% url 'stocks:stock_signal_viewer_id' signal_id=value.4 %}">{{ value.1 }}</a></td>
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<script>
+$(function () {
+    // sortable tables
+    $("#sortable1").tablesorter();
+});
+</script>
+{% endblock %}

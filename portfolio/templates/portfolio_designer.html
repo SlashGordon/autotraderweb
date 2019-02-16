@@ -1,0 +1,167 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+<div class="mb-2 mt-2" id="msg"></div>
+<div class="input-group mb-2 mr-sm-2">
+  <div class="input-group-prepend">
+    <div class="input-group-text">Name</div>
+  </div>
+  <input type="name" class="form-control" id="portfolioName" placeholder="ExamplePortfolio">
+</div>
+<div class="row">
+  <div class="col-sm">
+    <label>Stocks over index</label>
+    <select class="selectpicker" id="overindex" data-header="Add stocks to your portfolio" data-live-search="true"
+      multiple>
+      {% for index in indices %}
+      <optgroup label="{{ index.symbol }}">
+        {% for stock in index.stocks.all %}
+        <option data-subtext="{{ stock.name }}" value="{{ stock.id }}">{{ stock.symbol }}</option>
+        {% endfor %}responseText
+      </optgroup>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-sm">
+    <label>Stocks over region</label>
+    <select class="selectpicker" id="overregion" data-header="Add stocks to your portfolio" data-live-search="true"
+      multiple>
+      {% for region in regions %}
+      <optgroup label="{{ region.region }}">
+        {% for stock in stocks.all %}
+        {% if stock.region_id == region.id %}
+        <option data-subtext="{{ stock.name }}" value="{{ stock.id }}">{{ stock.symbol }}</option>
+        {% endif %}
+        {% endfor %}
+      </optgroup>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-sm">
+    <label>Stocks over industry</label>
+    <select class="selectpicker" id="overindustry" data-header="Add stocks to your portfolio" data-live-search="true"
+      multiple>
+      {% for tag in tags %}
+      <optgroup label="{{ tag.tag }}">
+        {% for stock in tag.stocks.all %}
+        <option data-subtext="{{ stock.name }}" value="{{ stock.id }}">{{ stock.symbol }}</option>
+        {% endfor %}
+      </optgroup>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm">
+    <label>Levermann</label><br>
+    <select class="selectpicker" id="overlevermann" data-header="Add stocks to your portfolio" data-live-search="true"
+      multiple>
+      {% for key, value in levermann.items %}
+      <optgroup label="{{ key }}">
+        {% for stock in value %}
+        <option data-subtext="{{ stock.name }}" value="{{ stock.id }}">{{ stock.symbol }}</option>
+        {% endfor %}responseText
+      </optgroup>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+<table class="table table-striped table-dark mt-5" id="portfolio">
+  <thead>
+    <tr>
+      <th scope="col">Symbol</th>
+      <th scope="col">Amount</th>
+      <th scope="col">Price per piece</th>
+      <th scope="col">Commission</th>
+      <th scope="col">Purchase Date</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+<div class="charts">
+  <div class="row">
+    <div class="col-sm" id="stockChart"></div>
+    <div class="col-sm" id="regionChart"></div>
+    <div class="col-sm" id="industryChart"></div>
+  </div>
+</div>
+<input type="button" class="btn btn-lg btn-block btn-dark" id="savePortfolio" name="savePortfolio" value="Save" />
+<script>
+
+
+  var gRegionData = PortFolioDesigner.createDataListBySelector('overregion');
+  var gIndustryData = PortFolioDesigner.createDataListBySelector('overindustry');
+  var gOrderDict = new Map();
+
+  $('#overregion, #overindustry, #overindex, #overlevermann').change(function () {
+    PortFolioDesigner.updateTable('#overregion, #overindustry, #overindex, #overlevermann', 'table tbody');
+  });
+
+  var chartDivStock = Highcharts.chart('stockChart', PortFolioDesigner.createChartOptions('Stocks'));
+  var chartDivRegion = Highcharts.chart('regionChart', PortFolioDesigner.createChartOptions('Region'));
+  var chartDivIndustry = Highcharts.chart('industryChart', PortFolioDesigner.createChartOptions('Industry'));
+
+  function updateCharts(id) {
+    if (PortFolioDesigner.orderComplete(gOrderDict, id)) {
+      gOrderDict = PortFolioDesigner.updateOrderDict(gOrderDict);
+      PortFolioDesigner.updateCharts([
+        { 'chart': chartDivStock, 'data': PortFolioDesigner.getData(gOrderDict, false) },
+        { 'chart': chartDivRegion, 'data': PortFolioDesigner.getDataCategory(gRegionData, gOrderDict) },
+        { 'chart': chartDivIndustry, 'data': PortFolioDesigner.getDataCategory(gIndustryData, gOrderDict) }
+      ])
+    }
+  }
+
+  $(document).on('change', '.priceField, .amountField, .commissionField', function () {
+
+    var id = $(this).attr("id");
+    // get default values
+    var stockId = PortFolioDesigner.getId(id);
+
+    gOrderDict.set(stockId + '_COMMISSION', $(stockId + '_COMMISSION').val() ? $(stockId + '_COMMISSION').val() : "10.0");
+    gOrderDict.set(stockId + '_DATE', $(stockId + '_DATE').val() ? $(stockId + '_DATE').val() : moment());
+    gOrderDict.set(id, $(this).val().replace(',', '.'));
+    PortFolioDesigner.printMap(gOrderDict);
+    updateCharts(id);
+  });
+
+
+  $(document).on('change.datetimepicker', function (e) {
+    if ('date' in e) {
+      gOrderDict.set(e.target.id, e.date);
+      PortFolioDesigner.printMap(gOrderDict);
+      updateCharts(e.target.id);
+    }
+  });
+
+  $('#savePortfolio').click(function () {
+    $.ajax({
+      type: "POST",
+      url: "{% url 'portfolio:save_portfolio' %}",
+      data: {
+        'name': $('#portfolioName').val(),
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+        'portfolio': PortFolioDesigner.orderDictToJson(gOrderDict)
+      },
+      dataType: "json",
+      success: function (response) {
+        if(response.status == '0')
+        {
+          $("#msg").html('<div class="alert alert-success" role="alert">'+ response.message +'</div>');
+        }
+        else
+        {
+          $("#msg").html('<div class="alert alert-danger" role="alert">'+ response.message +'</div>');
+        }
+      },
+      error: function (rs, e) {
+        $("#msg").html('<div class="alert alert-danger" role="alert">'+ rs.responseText +'</div>');
+      }
+    });
+  })
+
+</script>
+
+{% endblock %}

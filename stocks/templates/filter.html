@@ -1,0 +1,44 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+<h1>Score list</h1>
+<table id="sortable_filter" class="table" >
+    <thead>
+        <tr>
+            <th class="sortable">Symbol <i class="fa fa-fw fa-sort"></i></th>
+            {% for title in header %}
+            <th class="sortable">{{ title }} <i class="fa fa-fw fa-sort"></i></th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% with ctx=header|length%}
+    {% for filter in filters %}
+    {% if forloop.counter0|divisibleby:ctx %}
+    <tr>
+    <td><a href="{% url 'stocks:stock_data' stock_id=filter.stock__id %}">{{ filter.stock__symbol }}</a></td>
+    {% endif %}
+    {% if filter.status == 0 %}
+        <td class="alert alert-danger">{{ filter.value }}</td>
+    {% endif %}
+    {% if filter.status == 1 %}
+        <td class="alert alert-success">{{ filter.value }}</td>
+    {% endif %}
+    {% if filter.status == 2 %}
+        <td class="alert alert-warning">{{ filter.value }}</td>
+    {% endif %}
+    {% if forloop.counter|divisibleby:ctx %}
+    </tr>
+    {% endif %}
+    {% endfor %}
+    {% endwith %}
+    </tbody>
+</table>
+
+<script>
+$(function(){
+  $("#sortable_filter").tablesorter();
+});
+</script>
+
+{% endblock %}

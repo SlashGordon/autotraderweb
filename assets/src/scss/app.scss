@@ -1,0 +1,27 @@
+// My variables - includes variable overrides for vendored dependencies
+@import "variables";
+
+// Bootstrap
+@import "~bootstrap/scss/bootstrap";
+
+// Bootstrap select
+@import "~bootstrap-select/sass/bootstrap-select.scss";
+
+// date picker
+@import '~tempusdominus-bootstrap-4/build/css/tempusdominus-bootstrap-4.min.css';
+
+// Font Awesome
+$fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
+@import "~@fortawesome/fontawesome-free/scss/fontawesome.scss";
+@import "~@fortawesome/fontawesome-free/scss/solid.scss";
+
+@import url(https://fonts.googleapis.com/css?family=Raleway:400italic,300,400,700);
+
+th.sortable {
+    cursor: pointer;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}

@@ -1,0 +1,16 @@
+*.pyc
+*~
+*.log
+.idea*
+__pycache__
+myvenv
+db.sqlite3
+/static/
+.DS_Store
+/assets/output/
+/assets/webpack_bundles/
+/node_modules/
+
+mysql-dump/stocks.sql
+*/migrations/*
+dist/client.min.js

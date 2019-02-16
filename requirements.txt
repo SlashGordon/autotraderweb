@@ -1,0 +1,11 @@
+mysqlclient==1.4.2.post1
+Django==2.2.1
+django-debug-toolbar==1.11
+django-jinja==2.2.1
+django-jinja2==0.1
+json2html==1.2.1
+python-dateutil==2.8.0
+django-crispy-forms==1.7.2
+django-tempus-dominus==5.1.2.5
+django-bootstrap-modal-forms==1.4.2
+django-widget-tweaks==1.4.3

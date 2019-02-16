@@ -1,0 +1,16 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+<h1>Stocks</h1>
+
+<ul class="list-group">
+    {% for region in regions %}
+    <h2>{{ region.region }}</h2>
+    {% for stock in stocks.all %}
+    {% if stock.region_id == region.id %}
+    <li class="list-group-item"><a href="{% url 'stocks:stock_data' stock_id=stock.id %}">{{ stock.symbol }}</a></li>
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+</ul>
+{% endblock %}

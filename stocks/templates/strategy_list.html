@@ -1,0 +1,42 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+{% for strategies in portfolios_data %}
+<h1>{{ strategies.0 }} Strategy</h1>
+<div class="mb-5 panel-body table-responsive">
+    <table id="sortable1" class="table" >
+        <thead>
+            <tr>
+                <th class="sortable">Name<i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">user <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">cash <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">profit in % <i class="fa fa-fw fa-sort"></i></th>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+        {% for strategy in strategies.1 %}
+        <tr>
+            <td><a href="{% url 'stocks:strategy_view' id=strategy.portfolio__id %}">{{ strategy.portfolio__name }}</a></td>
+            <td>{{ strategy.portfolio__user }}</td>
+            <td>{{ strategy.portfolio__cash }}</td>
+            {% if portfolio.earnings < 0 %}
+            <td class="alert alert-danger">{{ strategy.earnings }}</td>
+            {% else %}
+            <td class="alert alert-success">{{ strategy.earnings }}</td>
+            {% endif %}
+            <td><a href="{{ strategy.delete_url }}" class="btn btn-danger"><i class="fa fa-trash"></i></a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+$(function () {
+    // sortable tables
+    $("#sortable{{ forloop.counter }}").tablesorter();
+});
+</script>
+{% endfor %}
+{% endblock %}

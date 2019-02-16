@@ -1,0 +1,59 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+<h1>Signal performance</h1>
+<div id="chartPerformance"></div>
+<h1>Signal performance over indices</h1>
+<div id="chartPerformanceIndices"></div>
+
+<script>
+$(function () {
+    Highcharts.chart('chartPerformance', {
+        chart: {
+            type: 'bar'
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            type: 'category',
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Earnings in %'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series:  [{
+            name: 'Overall performance',
+            data: {{ signals|safe }}
+        }]
+    });
+
+    Highcharts.chart('chartPerformanceIndices', {
+        chart: {
+            type: 'bar'
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            categories: {{ categories|safe  }}
+        },
+        yAxis: {
+            title: {
+                text: 'Earnings in %'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series: {{ signals_index|safe }}
+    });
+});
+</script>
+{% endblock %}

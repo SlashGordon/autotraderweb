@@ -1,0 +1,323 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load math_filters %}
+{% include "_modal.html" %}
+<h1>Portfolio {{ name }}</h1>
+<div class="row justify-content-md-center">
+    <div class="col-md-auto">
+        {% if pct > 0.0 %}
+        <div class="card border-left border-success shadow h-100 py-2">
+        {% else %}
+        <div class="col-md-auto card border-left border-danger shadow h-100 py-2">
+        {% endif %}
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        {% if pct > 0.0 %}
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Current value</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ value|floatformat:2 }} € ({{ pct|floatformat:2 }}%)</div>
+                        {% else %}
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Earnings (Value)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ value|floatformat:2 }} € ({{ pct|floatformat:2 }}%)</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-auto">
+                        <i class="fa fa-dollar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-auto col-md-offset-2">
+        {% if pct > 0.0 %}
+        <div class="card border-left border-success shadow h-100 py-2">
+        {% else %}
+        <div class="card border-left border-danger shadow h-100 py-2">
+        {% endif %}
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        {% if pct > 0.0 %}
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Current value + div</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ value_div|floatformat:2 }} € ({{ pct_div|floatformat:2 }}%)</div>
+                        {% else %}
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Earnings + div (Value)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ value_div|floatformat:2 }} € ({{ pct_div|floatformat:2 }}%)</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-auto">
+                        <i class="fa fa-dollar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<h2>Diversification</h2>
+<div class="charts">
+  <div class="row">
+    <div class="col-sm" id="stockChart"></div>
+    <div class="col-sm" id="regionChart"></div>
+    <div class="col-sm" id="industryChart"></div>
+  </div>
+</div>
+<h2>Portfolio</h2>
+<div class="mb-5 panel-body table-responsive">
+    <table id="sortable" class="table" >
+        <thead>
+            <tr>
+                <th class="sortable">Stock <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Size <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Earnings <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Levermann <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Piotroski <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Date <i class="fa fa-fw fa-sort"></i></th>
+                <th/>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+        {% for stockid, order in portfolio.items %}
+        <tr>
+            <td><a href="{% url 'stocks:stock_data' stock_id=stockid %}">{{ order.stock__symbol }} ({{ order.stock__name }})</a></td>
+            <td>{{ order.size }}</td>
+            {% if order.earnings < 0.0 %}
+            <td class="alert alert-danger">{{ order.earnings|floatformat:2 }}</td>
+            {% else %}
+            <td class="alert alert-success">{{ order.earnings|floatformat:2 }}</td>
+            {% endif %}
+
+            {% if  order.levermann_status == 0 %}
+            <td class="alert alert-danger">{{ order.levermann }}</td>
+            {% elif  order.levermann_status == 1 %}
+            <td class="alert alert-success">{{ order.levermann }}</td>
+            {% elif  order.levermann_status == 2 %}
+            <td class="alert alert-warning">{{ order.levermann }}</td>
+            {% else %}
+            <td>{{ order.levermann }}</td>
+            {% endif %}
+
+            {% if order.piotroski_status == 0 %}
+            <td class="alert alert-danger">{{ order.piotroski }}</td>
+            {% elif  order.piotroski_status == 1 %}
+            <td class="alert alert-success">{{ order.piotroski }}</td>
+            {% elif  order.piotroski_status == 2 %}
+            <td class="alert alert-warning">{{ order.piotroski }}</td>
+            {% else %}
+            <td>{{ order.piotroski }}</td>
+            {% endif %}
+            <td>{{ order.date }}</td>
+            <td><button class="btn btn-info" id="sell{{ stockid }}"><i class="fa fa-dollar-sign"></i></button></td>
+            <td><button class="btn btn-success" id="div{{ stockid }}"><i class="fa fa-coins"></i></button></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="col-xs-1" align="center">
+    <button class="btn btn-info" id="addStock"><i class="fa fa-plus"> Add Order</i></button>
+</div>
+<h2>Order History</h2>
+<div class="mb-5 panel-body table-responsive">
+    <table id="sortable2" class="table" >
+        <thead>
+            <tr>
+                <th class="sortable">Stock <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Size <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Price <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Commission <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Total <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Date <i class="fa fa-fw fa-sort"></i></th>
+                <th/>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+        {% for order in orders%}
+        <tr>
+            <td><a href="{% url 'stocks:stock_data' stock_id=order.stock.id %}">{{ order.stock.symbol }} ({{ order.stock.name }})</a></td>
+            <td>{{ order.size }}</td>
+            <td>{{ order.price }}</td>
+            <td>{{ order.commission }}</td>
+            <td>{% price_total order.price order.size order.commission %}</td>
+            <td>{{ order.date }}</td>
+            <td><button class="btn btn-info" id="edit{{ order.id }}"><i class="fa fa-edit"></i></button></td>
+            <td><button class="btn btn-danger" id="delete{{ order.id }}"><i class="fa fa-trash"></i></button></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if portfolio_graph|length > 0 %}
+<h2>Sells</h2>
+<div class="mb-5" id="chart" style="width:100%; height:600px;"></div>
+{% endif %}
+
+{% if dividends|length > 0 %}
+<h2>Dividends</h2>
+<div class="mb-5 panel-body table-responsive">
+    <table id="sortable3" class="table" >
+        <thead>
+            <tr>
+                <th class="sortable">Stock <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Sum <i class="fa fa-fw fa-sort"></i></th>
+                <th class="sortable">Date <i class="fa fa-fw fa-sort"></i></th>
+                <th/>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+        {% for div in dividends%}
+        <tr>
+            <td><a href="{% url 'stocks:stock_data' stock_id=div.stock_id %}">{{ div.stock_symbol }} ({{ div.stock_name }})</a></td>
+            <td>{{ div.sum }} €</td>
+            <td>{{ div.date }}</td>
+            <td><button class="btn btn-info" id="editDiv{{ div.id }}"><i class="fa fa-edit"></i></button></td>
+            <td><button class="btn btn-danger" id="deleteDiv{{ div.id }}"><i class="fa fa-trash"></i></button></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="mb-5" id="container_div" style="width:100%; height:600px;"></div>
+{% endif %}
+
+{% if signal_stats|length > 0 %}
+<h2>Signal performance</h2>
+<div class="mb-5" id="chartPerformance" style="width:100%; height:600px;"></div>
+{% endif %}
+<script>
+$(function(){
+  $("#sortable").tablesorter();
+});
+
+$(document).ready(function()
+{
+    $("#addStock").modalForm({
+        formURL: "{% url 'portfolio:buy' portfolio_id=id %}"
+    });
+
+    {% for stockid, order in portfolio.items %}
+    $("#div{{ stockid }}").modalForm({
+        formURL: "{% url 'portfolio:dividend' portfolio_id=id stock_id=stockid%}"
+    });
+    $("#sell{{ stockid }}").modalForm({
+        formURL: "{% url 'portfolio:sell' portfolio_id=id stock_id=stockid%}"
+    });
+    {% endfor %}
+
+    {% for order in orders %}
+    $("#edit{{ order.id }}").modalForm({
+        formURL: "{% url 'portfolio:edit' pk=order.id%}"
+    });
+
+    $("#delete{{ order.id }}").modalForm({
+        formURL: "{% url 'portfolio:order_delete_view' pk=order.id%}"
+    });
+    {% endfor %}
+
+    {% for div in dividends%}
+
+    $("#editDiv{{ div.id }}").modalForm({
+        formURL: "{% url 'portfolio:div_edit' pk=div.id%}"
+    });
+
+    $("#deleteDiv{{ div.id }}").modalForm({
+        formURL: "{% url 'portfolio:div_delete' pk=div.id%}"
+    });
+    {% endfor %}
+
+});
+{% if dividends|length > 0 %}
+Highcharts.chart('container_div', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Dividends'
+    },
+    xAxis: {
+        categories: {{ div_categories|safe }},
+        crosshair: true
+    },
+    credits: {
+        enabled: false
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Dividends (€)'
+        }
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        },
+      series: {
+        stacking: 'true'
+      }
+    },
+    series: {{ div_cols|safe }}
+});
+{% endif %}
+$(function () {
+    var chartDivStock = Highcharts.chart('stockChart', PortFolioDesigner.createChartOptionsData('Stocks', {{ stock_data|safe }}));
+    var chartDivRegion = Highcharts.chart('regionChart', PortFolioDesigner.createChartOptionsData('Region', {{ region_data|safe }}));
+    var chartDivIndustry = Highcharts.chart('industryChart', PortFolioDesigner.createChartOptionsData('Industry', {{ industry_data|safe }}));
+ {% if  signal_stats|length > 0 %}
+    Highcharts.chart('chartPerformance', {
+        chart: {
+            type: 'bar'
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            type: 'category',
+        },
+        yAxis: {
+            title: {
+                text: 'Earnings in €'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series:  [{
+            name: 'Signal performance',
+            data: {{ signal_stats|safe }}
+        }]
+    });
+{% endif %}
+{% if  portfolio_graph|length > 0 %}
+
+    Highcharts.chart('chart', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            type: 'datetime'
+        },
+        yAxis: {
+            title: {
+                text: 'Portfolio cash in €'
+            }
+        },
+        credits: {
+            enabled: false
+        },
+        series:  [{
+            name: 'Overall performance',
+            data: {{ portfolio_graph }}
+        }]
+    });
+{% endif %}
+});
+</script>
+{% endblock %}
+

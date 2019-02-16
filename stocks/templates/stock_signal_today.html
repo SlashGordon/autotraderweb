@@ -1,0 +1,33 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+{% for type, signal in signals %}
+<h1>Signals {{ type }}</h1>
+<table class="table" id="sortable{{ forloop.counter }}">
+    <thead>
+        <tr>
+            <th class="sortable">Symbol<i class="fa fa-fw fa-sort"></i></th>
+            <th class="sortable">Earnings in Percent<i class="fa fa-fw fa-sort"></i></th>
+            <th class="sortable">Signal count<i class="fa fa-fw fa-sort"></i></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for signal_data in signal %}
+    <tr>
+        <td><a href="{% url 'stocks:stock_data' stock_id=signal_data.stock__id %}">{{ signal_data.stock__symbol }}</a></td>
+        <td>{{ signal_data.average_rating }}</td>
+        <td>{{ signal_data.count }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+<script>
+$(function () {
+    // sortable tables
+    $("#sortable1").tablesorter();
+    $("#sortable2").tablesorter();
+});
+</script>
+{% endblock %}

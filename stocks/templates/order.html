@@ -1,0 +1,82 @@
+{% extends 'layouts/default/base.html' %}
+
+{% block content %}
+{% load app_filters %}
+{% if order.is_sell == 1 %}
+    <h1>Sell Order {{ order.id }}</h1>
+{% else %}
+    <h1>Buy Order {{ order.id }}</h1>
+{% endif %}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Key</th>
+      <th scope="col">Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">date</th>
+      <td>{{ order.date }}</td>
+    </tr>
+    <tr>
+      <th scope="row">status</th>
+      <td>{{ order.status }}</td>
+
+    </tr>
+    <tr>
+      <th scope="row">order_type</th>
+      <td>{{ order.order_type }}</td>
+    </tr>
+      <tr>
+      <th scope="row">order_uuid</th>
+      <td>{{ order.order_uuid }}</td>
+    </tr>
+      <tr>
+      <th scope="row">size</th>
+      <td>{{ order.size }}</td>
+    </tr>
+    <tr>
+      <th scope="row">is_sell</th>
+      <td>{{ order.is_sell }}</td>
+    </tr>
+    <tr>
+      <th scope="row">price</th>
+      <td>{{ order.price }}</td>
+    </tr>
+    <tr>
+      <th scope="row">stock</th>
+      <td><a href="{% url 'stocks:stock_data' stock_id=order.stock.id %}">{{ order.stock.symbol }} ({{ order.stock.name }})</a></td>
+    </tr>
+    <tr>
+      <th scope="row">portfolio</th>
+      <td><a href="{% url 'stocks:strategy_view' id=order.portfolio.id %}">{{order.portfolio.name }}</a></td>
+    </tr>
+    <tr>
+      <th scope="row">commission</th>
+      <td>{{ order.commission }}</td>
+    </tr>
+    <tr>
+      <th scope="row">price_complete</th>
+      <td>{{ order.price_complete }}</td>
+    </tr>
+    <tr>
+      <th scope="row">signal</th>
+      <td>{{ order.signal.id }}</td>
+    </tr>
+    <tr>
+      <th scope="row">expire_date</th>
+      <td>{{ order.expire_date }}</td>
+    </tr>
+    <tr>
+      <th scope="row">orders</th>
+      {% if order.orders.id and not order.is_sell %}
+         <td class="alert alert-success">{{ order.orders.id }}</td>
+      {% else %}
+         <td class="alert alert-danger">{{ order.orders.id }}</td>
+      {% endif %}
+    </tr>
+  </tbody>
+</table>
+{% endblock %}

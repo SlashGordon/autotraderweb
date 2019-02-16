@@ -1,0 +1,21 @@
+{% load widget_tweaks %}
+
+{% load app_filters %}
+{% if object.get_template_name in 'Orders,Portfolio,Dividend' %}
+<form method="POST">
+    {% csrf_token %}
+    <div class="modal-body">
+        <h1>Delete {{ object.get_template_name }}</h1>
+        <p>Are you sure you want to delete {{ object.get_template_name }}:{{ object.id }}?</p>
+    </div>
+
+    <div class="modal-footer">
+        <input type="submit" class="btn btn-danger" value="Confirm">
+        <a href="{{ object.get_absolute_url }}" class='btn btn-primary'>Go back</a>
+    </div>
+</form>
+{% else %}
+<div class="alert alert-danger">
+    <strong>Deletion</strong> of {{ object.get_template_name }} is not supported.
+</div>
+{% endif %}

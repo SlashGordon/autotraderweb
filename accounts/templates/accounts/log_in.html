@@ -1,0 +1,33 @@
+{% extends 'layouts/default/base.html' %}
+
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+
+    <h4>{% trans 'Log in' %}</h4>
+
+    <form method="post">
+
+        {% csrf_token %}
+        {{ form|crispy }}
+
+        <button class="btn btn-primary">{% trans 'Log in' %}</button>
+
+    </form>
+
+    <hr>
+
+    <ul>
+        <li>
+            <a href="{% url 'accounts:restore_password' %}">{% trans 'Forgot your password?' %}</a>
+        </li>
+        <li>
+            <a href="{% url 'accounts:remind_username' %}">{% trans 'Forgot your username?' %}</a>
+        </li>
+        <li>
+            <a href="{% url 'accounts:resend_activation_code' %}">{% trans 'Resend an activation code' %}</a>
+        </li>
+    </ul>
+
+{% endblock %}
